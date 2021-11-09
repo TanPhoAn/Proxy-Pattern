@@ -1,0 +1,171 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Main
+{
+    
+    interface IBank //ISubject
+    {
+        
+         double Withdraw(double value);
+
+         double Deposit(double value);
+
+         double Balance();
+       
+    }
+    
+    public class Customer
+    {
+        string Name { get; set; }
+        string PassWord { get; set; }
+        public string GetName()
+        {
+            return Name;
+        }
+        public string GetPassWord()
+        {
+            return PassWord;
+        }
+        public Customer(string a, string b) {
+            Name = a;
+            PassWord = b;
+        }
+    }
+    
+    public class CustomerBank:IBank //RealSubject
+    {
+        Customer customer = null;
+        public string _Name { get; set; }
+        public string _Password { get; set; }
+        double money { get; set; }
+       //expensive            
+        public CustomerBank()
+        {
+            _Name = customer.GetName();
+            _Password = customer.GetPassWord();
+            money = 0;
+        }
+        public CustomerBank(string a, string b)
+        {
+            _Name = a;
+            _Password = b;
+            money = 0;
+        }
+        public double Withdraw(double value)
+        {
+            
+            this.money -= value;
+            return value;
+        }
+        public double Deposit(double value)
+        {
+            this.money += value;
+            return value;
+        }
+        public double Balance()
+        {
+            return this.money;
+        }
+    }
+    
+    class ATMProxy_LazyBank:IBank
+    {
+        //to keep track(about client want to instantiate a Bank object or not), we need an instance variable
+        private CustomerBank bank = null;//concrete//as default
+                                 //null because we dont need real object
+                                 //if we create = new Bank, that mean whenever we instantiate an ATMProxy, we also instantiate a Bank which mean we will
+                                 //necessarily have to incur the expensive(constructor)(have to perform constr)
+                                 //we want to delegate for Bank above but we dont hav a bank yet because b is null
+                                 //so, we check if we have Bank call
+        private string Name = null;
+        private string PassWord = null;
+        private double money = 0;
+
+        public ATMProxy_LazyBank() { }
+        public ATMProxy_LazyBank(Customer c)
+        {
+            this.Name = c.GetName();
+            this.PassWord = c.GetPassWord();
+            this.money = 0;
+        }
+        public void Authenticate(string a, string b)
+        {
+            if(this.Name == a && this.PassWord == b)
+            {
+                Console.WriteLine("Allow access !!!");
+                //expensive parsing 
+
+                this.bank = new CustomerBank(a,b);
+            }
+            else
+            {
+                Console.WriteLine("Your UserName or Password is wrong");
+                
+            }
+        }
+        
+        public double Withdraw(double value) {
+            if (this.bank == null)
+            {
+                Console.WriteLine("You must authenticate first !!!");
+            }
+            else
+            {
+                return this.bank.Withdraw(value);
+            }
+            return 0;
+        }
+
+        public double Deposit(double value) {
+            if (this.bank == null)
+            {
+                Console.WriteLine("You must authenticate first !!!");
+            }
+            else
+            {
+                return this.bank.Deposit(value);
+            }
+            return 0;
+        }
+
+        public double Balance()
+        {
+            if (this.bank == null)
+            {
+                Console.WriteLine("You must authenticate first !!!");
+            }
+            else
+            {
+                return this.bank.Balance();
+            }
+            return 0;
+        }
+        
+    }
+    class Program
+    {
+        static void Main(string[] args)
+        {
+           
+            Customer a= new Customer("Tan", "123");
+            Customer b = new Customer("Pho", "456");
+            Customer c = new Customer("An", "789");
+
+            ATMProxy_LazyBank BIDVATM = new ATMProxy_LazyBank(b);
+            BIDVATM.Authenticate("Pho", "456");
+            Console.WriteLine($"You deposit: {BIDVATM.Deposit(500)}$");
+            Console.WriteLine($"Your balance: {BIDVATM.Balance()}$");
+            Console.WriteLine($"You withdraw: {BIDVATM.Withdraw(200)}$");
+            Console.WriteLine($"Your balance: {BIDVATM.Balance()}$");
+
+
+            ATMProxy_LazyBank BIDVATM02 = new ATMProxy_LazyBank(c);
+            BIDVATM02.Authenticate("AN", "123");
+            BIDVATM02.Withdraw(1000);
+            BIDVATM02.Deposit(10000);
+            BIDVATM02.Balance();
+        }
+    }
+}
